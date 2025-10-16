@@ -194,6 +194,10 @@ class vText(str):
     def from_ical(cls, ical: ICAL_TYPE):
         ical_unesc = unescape_char(ical)
         return cls(ical_unesc)
+    @property
+    def ics_value(self):
+        """Return the native Python value of this vText (a string)."""
+        return str(self)
 
     from icalendar.param import ALTREP, LANGUAGE, RELTYPE
 
@@ -805,6 +809,10 @@ class vDate(TimeBase):
             return date(*timetuple)
         except Exception as e:
             raise ValueError(f"Wrong date format {ical}") from e
+    @property
+    def ics_value(self):
+        """Return the native Python value of this vDate (a datetime.date)."""
+        return self.dt
 
 
 class vDatetime(TimeBase):
@@ -889,6 +897,9 @@ class vDatetime(TimeBase):
         except Exception as e:
             raise ValueError(f"Wrong datetime format: {ical}") from e
         raise ValueError(f"Wrong datetime format: {ical}")
+    @property
+    def ics_value(self):
+        return self.dt
 
 
 class vDuration(TimeBase):
@@ -1022,6 +1033,9 @@ class vDuration(TimeBase):
     def dt(self) -> timedelta:
         """The time delta for compatibility."""
         return self.td
+    @property
+    def ics_value(self):
+        return self.td
 
 
 class vPeriod(TimeBase):
@@ -1153,6 +1167,35 @@ class vPeriod(TimeBase):
     def dt(self):
         """Make this cooperate with the other vDDDTypes."""
         return (self.start, (self.duration if self.by_duration else self.end))
+    
+    @property
+    def ics_value(self):
+        """
+        Return a Python-native representation of the period.
+
+        Handles both:
+        - vPeriod instance with .start/.end/.duration
+        - tuple returned by from_ical() → (start, end) or (start, duration)
+        """
+        # If self is a tuple (from old from_ical)
+        if isinstance(self, tuple):
+            start, end_or_duration = self
+            print(type(start))
+            print((start))
+
+            # Determine if second element is timedelta or datetime
+            if isinstance(end_or_duration, timedelta):
+                return {"start": start, "duration": end_or_duration}
+            else:
+                return {"start": start, "end": end_or_duration}
+
+        # If self is a normal vPeriod instance
+        result = {"start": getattr(self, "start", None)}
+        if hasattr(self, "end") and self.end is not None:
+            result["end"] = self.end
+        elif hasattr(self, "duration") and self.duration is not None:
+            result["duration"] = self.duration
+        return result
 
     from icalendar.param import FBTYPE
 
