@@ -161,6 +161,11 @@ class vBoolean(int):
             return cls.BOOL_MAP[ical]
         except Exception as e:
             raise ValueError(f"Expected 'TRUE' or 'FALSE'. Got {ical}") from e
+    @property
+    def ics_value(self):
+        """Return the native Python boolean value."""
+        return self.value
+        
 
 
 class vText(str):
@@ -468,6 +473,12 @@ class vFloat(float):
             return cls(ical)
         except Exception as e:
             raise ValueError(f"Expected float value, got: {ical}") from e
+        
+    @property
+    def ics_value(self):
+        """Return the Python-native representation of this value."""
+        return self.value
+
 
 
 class vInt(int):
@@ -537,6 +548,11 @@ class vInt(int):
             return cls(ical)
         except Exception as e:
             raise ValueError(f"Expected int, got: {ical}") from e
+    @property
+    def ics_value(self):
+        """Return the Python-native representation of this value."""
+        return self.value
+
 
 
 class vDDDLists:
@@ -1169,11 +1185,7 @@ class vPeriod(TimeBase):
         return (self.start, (self.duration if self.by_duration else self.end))
     @property
     def ics_value(self):
-        if self.by_duration:
-            return (self.start, self.duration)
-        return (self.start, self.end)
-
-    
+        return self.dt
 
 
 
