@@ -1167,37 +1167,14 @@ class vPeriod(TimeBase):
     def dt(self):
         """Make this cooperate with the other vDDDTypes."""
         return (self.start, (self.duration if self.by_duration else self.end))
-    
     @property
     def ics_value(self):
-        """
-        Return a Python-native representation of the period.
+        if self.by_duration:
+            return (self.start, self.duration)
+        return (self.start, self.end)
 
-        Handles both:
-        - vPeriod instance with .start/.end/.duration
-        - tuple returned by from_ical() → (start, end) or (start, duration)
-        """
-        # If self is a tuple (from old from_ical)
-        if isinstance(self, tuple):
-            start, end_or_duration = self
-            print(type(start))
-            print((start))
+    
 
-            # Determine if second element is timedelta or datetime
-            if isinstance(end_or_duration, timedelta):
-                return {"start": start, "duration": end_or_duration}
-            else:
-                return {"start": start, "end": end_or_duration}
-
-        # If self is a normal vPeriod instance
-        result = {"start": getattr(self, "start", None)}
-        if hasattr(self, "end") and self.end is not None:
-            result["end"] = self.end
-        elif hasattr(self, "duration") and self.duration is not None:
-            result["duration"] = self.duration
-        return result
-
-    from icalendar.param import FBTYPE
 
 
 class vWeekday(str):
